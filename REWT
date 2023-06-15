@@ -1,0 +1,47 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.4;
+
+contract TaskManager {
+    uint256 public totalTasks = 0;
+    mapping(uint256 => string) public tasks;
+    mapping(uint256 => address) public taskOwner;
+    
+    constructor() payable {}
+
+    // Default function to add a task
+    function addTask(string calldata taskDescription) external {
+        totalTasks += 1;
+        tasks[totalTasks] = taskDescription;
+        taskOwner[totalTasks] = msg.sender;
+    }
+
+    // Pure function to join two task descriptions
+    function joinTaskDescriptions(string calldata task1, string calldata task2) external pure returns(string memory) {
+        return string(abi.encodePacked(task1, " and ", task2));
+    }
+
+    // View function to get a task by its id
+    function getTask(uint256 taskId) external view returns(string memory) {
+        require(taskId <= totalTasks, "Task does not exist.");
+        return tasks[taskId];
+    }
+
+    // Internal function to remove a task
+    function removeTask(uint256 taskId) internal {
+        require(taskId <= totalTasks, "Task does not exist.");
+        require(taskOwner[taskId] == msg.sender, "Only the task owner can remove the task.");
+        delete tasks[taskId];
+        delete taskOwner[taskId];
+    }
+
+    // External function that calls internal function
+    function removeTaskCall(uint256 taskId) external {
+        removeTask(taskId);
+    }
+
+    // Payable function that allows removing a task and sending Ether
+    function removeTaskPayable(uint256 taskId) external payable returns(uint256 balance) {
+        removeTask(taskId);
+        balance = address(this).balance;
+    }
+}
